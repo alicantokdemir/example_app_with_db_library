@@ -1,3 +1,6 @@
+# App Layout
+![App Layout](./App_Layout.png)
+
 # Requirements
 node.js
 web browser (latest firefox or chrome preferred)
