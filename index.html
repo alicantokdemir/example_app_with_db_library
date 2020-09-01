@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Database Demo App</title>
+  <style>
+    @font-face {
+        font-family: 'Hanken Grotesk Regular';
+        src: url('./assets/fonts/HKGrotesk-Regular.eot');
+        src: local('Hanken Grotesk Regular'), 
+            local('Hanken Grotesk'), 
+            url('./assets/fonts/HKGrotesk-Regular.eot?#iefix') format('embedded-opentype'),
+            url('./assets/fonts/HKGrotesk-Regular.woff2') format('woff2'), 
+            url('./assets/fonts/HKGrotesk-Regular.woff') format('woff'),
+            url('./assets/fonts/hkgrotesk-regular.ttf') format('truetype');
+    }
+
+    /** variables */
+    :root {
+      --boxShadowDefault: 0 4px 8px 0 rgba(0,0,0,0.2);
+      --borderRadiusDefault: 3px;
+    }
+
+    html {
+      box-sizing: border-box;
+      font-size: 12px;
+      background: lightgray;
+      font-family: 'Hanken Grotesk Regular', Arial, Helvetica, sans-serif;
+    }
+
+    /** normalize */
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+
+    body, h1, h2, h3, h4, h5, h6, p, ol, ul {
+      margin: 0;
+      padding: 0;
+      font-weight: normal;
+    }
+
+    ol, ul {
+      list-style: none;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /** helper classes */
+    .mt-15 {
+      margin-top: 15px;
+    }
+
+    .mt-30 {
+      margin-top: 30px;
+    }
+
+    .mr-10 {
+      margin-right: 10px;
+    }
+
+    .container {
+      padding-right: 40px;
+      padding-left: 40px;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    .card {
+      width: 100%;
+      padding: 15px;
+      background: white;
+      /** ie fallback */
+      box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+      box-shadow: var(--boxShadowDefault);
+      /** ie fallback */
+      border-radius: 3px;
+      border-radius: var(--borderRadiusDefault);
+    }
+
+    .card__title {
+      margin-bottom: 12px;
+      font-size: 2em;
+    }
+
+    .data-table {
+      width: 100%;
+      border: 1px solid black;
+      border-spacing: 0;
+      /** ie fallback */
+      box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+      box-shadow: var(--boxShadowDefault);
+      /** ie fallback */
+      border-radius: 3px;
+      border-radius: var(--borderRadiusDefault);
+      padding-bottom: 10px;
+    }
+
+    .data-table__header {
+      text-align: left;
+      font-size: 1.2em;
+      padding: 6px 10px;
+    }
+
+    .data-table__header--bg-color-main {
+      background-color: purple;
+      color: white;
+    }
+
+    .data-table__th, .data-table__td {
+      text-align: right;
+      padding: 6px 10px;
+      border-bottom: 1px solid #f6f6f6;
+    }
+
+    .data-table__th:first-child, .data-table__td:first-child {
+      text-align: left;
+    }
+
+    .icon {
+      width: 1em;
+      height: 1em;      
+      vertical-align: middle;
+      margin-top: -2px;
+    }
+
+    .label {
+      background-color: grey;
+      color: white;
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // small hack to work with exports to not setup webpack etc.
+    var exports = {};
+  </script>
+  <script type="module">
+    import * as m from './myDb-dist/myDb.js';
+    const myDb = exports;
+
+    const db = myDb.createDb('My Database');
+
+    const ACCOUNT_STATUS = {
+      ACTIVE: 'ACCOUNT_STATUS_ACTIVE',
+      BLOCKED: 'ACCOUNT_STATUS_BLOCKED'
+    };
+    Object.freeze(ACCOUNT_STATUS);
+
+    myDb.addTable(db, 'customers');
+    myDb.addTable(db, 'account');
+
+    myDb.addEntity(db, 'customers', 0, { 
+      birthDate: new Date(1987, 11, 15).getTime(), 
+      cpf: '23452821870', 
+      email: 'joao.silva@email.com', 
+      name: 'João da Silva e Silva'
+    });
+
+    myDb.addEntity(db, 'customers', 1, { 
+      birthDate: new Date(1962, 0, 18).getTime(), 
+      cpf: '68224583022', 
+      email: 'maria.goncalves@email.com', 
+      name: 'Maria Gonçalves Oliveira'
+    });
+
+    myDb.addEntity(db, 'customers', 2, { 
+      birthDate: new Date(1989, 2, 20).getTime(), 
+      cpf: '20777292316', 
+      email: 'janaina.araujo@email.com', 
+      name: 'Janaina Araújo dos Santos'
+    });
+
+    myDb.addEntity(db, 'account', 0, { 
+      balance: 633400,
+      cpf: ['customers', '2', 'cpf'], 
+      status: ACCOUNT_STATUS.ACTIVE
+    });
+
+    myDb.addEntity(db, 'account', 1, { 
+      balance: -2357000,
+      cpf: ['customers', '0', 'cpf'], 
+      status: ACCOUNT_STATUS.BLOCKED
+    });   
+
+    const { _name: dbName, customers: customerEntites, account: accountEntities } = myDb.denormalize(db);
+
+    const customerColumns = [
+      {
+        name: 'Entity ID',
+        accessor: 'eId',
+      },
+      {
+        name: 'Birthdate',
+        accessor: 'birthDate',
+      },
+      {
+        name: 'CPF',
+        accessor: 'cpf',
+      },
+      {
+        name: 'e-mail',
+        accessor: 'email',
+      },
+      {
+        name: 'Name',
+        accessor: 'name',
+      }
+    ];
+
+    const accountColumns = [
+      {
+        name: 'Entity ID',
+        accessor: 'eId',
+      },
+      {
+        name: 'Balance',
+        accessor: 'balance',
+      },
+      {
+        name: 'CPF',
+        accessor: 'cpf',
+        component: (val) => `<div class="label"><img class="icon mr-10" src="./assets/icons/link.svg" /><span>${formatVal('cpf', val)}</span></div>`
+      },
+      {
+        name: 'Status',
+        accessor: 'status',
+      },
+    ];
+
+    const customersTable = createTable('Customers', customerColumns, entityToRows(customerEntites));
+    const accountTable = createTable('Account', accountColumns, entityToRows(accountEntities));
+    accountTable.classList.add('mt-15');
+
+    const container = document.createElement('main');
+    container.classList.add('container');
+
+    const card = document.createElement('section');
+    card.classList.add('card', 'mt-30');
+
+    const title = document.createElement('h1');
+    title.textContent = dbName;
+    title.classList.add('card__title');
+
+    card.appendChild(title);
+    card.appendChild(customersTable);
+    card.appendChild(accountTable);
+    container.appendChild(card);
+    document.body.appendChild(container);
+
+    function createTable(tHeaderText, columns, rows, baseClass = 'data-table') {
+      const tb = document.createElement('table');
+      tb.classList.add(baseClass);
+
+      const tHead = tb.createTHead();      
+      const tHeadRow = tHead.insertRow(0);
+      tHeadRow.classList.add(baseClass + '__row');
+      
+      const tHeader = document.createElement('th');
+      tHeader.colSpan = columns.length;
+      tHeader.textContent = tHeaderText;
+      tHeader.classList.add(baseClass + '__header', baseClass + '__header--bg-color-main');
+      tHeadRow.appendChild(tHeader);
+      
+      const tBody = tb.createTBody();
+
+      const firstRow = tBody.insertRow();
+
+      columns.forEach(col => {
+        const th = document.createElement('th');
+        th.classList.add(baseClass + '__th');
+        th.textContent = col.name;
+        firstRow.appendChild(th);
+      });
+
+      rows.forEach((row, rowIdx) => {
+        const r = tBody.insertRow();
+        r.classList.add(baseClass + '__row');
+        columns.forEach((col, colIdx) => {
+          const c = r.insertCell(colIdx);
+          c.classList.add(baseClass + '__td');
+          c.innerHTML = col.component ? col.component(row[col.accessor]) : formatVal(col.accessor, row[col.accessor]);
+        });
+      });
+    
+      return tb;
+    }
+
+    // Helper functions
+    function entityToRows(entity) {
+      return Object.keys(entity).map(eId => (
+        {
+          eId,
+          ...entity[eId]
+        }
+      ));
+    }
+
+    function formatVal(col, value) {
+      switch(col) {
+        case 'cpf': 
+          return formatCpf(value);
+        case 'birthDate':
+          return formatDate(new Date(value));
+        default:
+          return value;
+      }
+    }
+
+    function formatCpf(value) {
+      return value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    }
+
+    function formatDate(date) {
+      let year = date.getFullYear();
+      let month = (1 + date.getMonth()).toString().padStart(2, '0');
+      let day = date.getDate().toString().padStart(2, '0');
+  
+      return day + '/' + month + '/' + year;
+    }
+
+  </script>
+</body>
+</html>
